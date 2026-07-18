@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laptop Price Predictor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0A0F1C;
+    --bg-alt: #0F1626;
+    --card: #131C30;
+    --card-border: #23304A;
+    --accent: #4C8DFF;
+    --accent-soft: rgba(76,141,255,0.12);
+    --mint: #35D6B0;
+    --mint-soft: rgba(53,214,176,0.12);
+    --text: #E7ECF5;
+    --text-dim: #8B96AC;
+    --text-faint: #5B6580;
+    --radius: 10px;
+  }
+  *{ box-sizing: border-box; margin:0; padding:0; }
+  html{ scroll-behavior: smooth; }
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
+    overflow-x: hidden;
+  }
+  h1,h2,h3, .display{
+    font-family: 'Space Grotesk', sans-serif;
+    letter-spacing: -0.01em;
+  }
+  .mono{ font-family: 'JetBrains Mono', monospace; }
+  a{ color: inherit; text-decoration: none; }
+  img, svg{ display:block; }
+  .wrap{
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+  @media (max-width: 640px){ .wrap{ padding: 0 20px; } }
+
+  /* background grid texture */
+  .grid-bg{
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 90%);
+  }
+
+  /* ---------- NAV ---------- */
+  header{
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(10,15,28,0.75);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--card-border);
+  }
+  nav{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    height: 68px;
+  }
+  .logo{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size: 18px;
+  }
+  .logo-mark{
+    width: 26px; height:26px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, var(--accent), var(--mint));
+    display:flex; align-items:center; justify-content:center;
+    font-size: 13px;
+  }
+  .nav-links{
+    display:flex;
+    gap: 36px;
+    font-size: 14.5px;
+    color: var(--text-dim);
+  }
+  .nav-links a{ transition: color 0.15s ease; position: relative; }
+  .nav-links a:hover{ color: var(--text); }
+  .nav-cta{
+    background: var(--accent);
+    color: #061024;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 9px 18px;
+    border-radius: 7px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .nav-cta:hover{ transform: translateY(-1px); box-shadow: 0 6px 20px rgba(76,141,255,0.35); }
+  .nav-toggle{ display:none; background:none; border:none; color:var(--text); font-size:22px; }
+
+  @media (max-width: 780px){
+    .nav-links{ display:none; }
+    .nav-toggle{ display:block; }
+  }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    padding: 96px 0 88px;
+    display:grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 56px;
+    align-items:center;
+  }
+  @media (max-width: 900px){
+    .hero{ grid-template-columns: 1fr; padding: 56px 0 48px; text-align:center; }
+    .hero-visual{ order: -1; }
+  }
+  .eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--mint);
+    background: var(--mint-soft);
+    border: 1px solid rgba(53,214,176,0.3);
+    padding: 6px 12px;
+    border-radius: 999px;
+    margin-bottom: 22px;
+  }
+  .eyebrow::before{ content:"●"; font-size:8px; }
+  .hero h1{
+    font-size: clamp(2.1rem, 4.2vw, 3.4rem);
+    font-weight: 700;
+    line-height: 1.08;
+    margin-bottom: 22px;
+  }
+  .hero h1 .accent{ color: var(--accent); }
+  .hero p.lead{
+    font-size: 17px;
+    color: var(--text-dim);
+    max-width: 480px;
+    margin-bottom: 34px;
+  }
+  @media (max-width:900px){ .hero p.lead{ margin-left:auto; margin-right:auto; } }
+
+  .btn-row{ display:flex; gap:14px; flex-wrap:wrap; }
+  @media (max-width:900px){ .btn-row{ justify-content:center; } }
+  .btn{
+    padding: 13px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14.5px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  }
+  .btn-primary{
+    background: linear-gradient(135deg, var(--accent), #3A6FE0);
+    color: #061024;
+  }
+  .btn-primary:hover{ transform: translateY(-2px); box-shadow: 0 10px 26px rgba(76,141,255,0.4); }
+  .btn-ghost{
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    background: rgba(255,255,255,0.02);
+  }
+  .btn-ghost:hover{ border-color: var(--accent); color: var(--accent); }
+
+  /* --- Signature element: live terminal/ticker card --- */
+  .terminal{
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6);
+  }
+  .terminal-bar{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--card-border);
+    background: rgba(255,255,255,0.015);
+  }
+  .dot{ width:10px; height:10px; border-radius:50%; }
+  .dot:nth-child(1){ background:#FF5F57; }
+  .dot:nth-child(2){ background:#FEBC2E; }
+  .dot:nth-child(3){ background:#28C840; }
+  .terminal-title{
+    margin-left: 8px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+  .terminal-body{ padding: 22px 22px 24px; }
+  .spec-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding: 9px 0;
+    border-bottom: 1px dashed rgba(255,255,255,0.07);
+    font-family:'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+  .spec-row span:first-child{ color: var(--text-faint); }
+  .spec-row span:last-child{ color: var(--text); font-weight: 500; }
+  .predict-out{
+    margin-top: 18px;
+    background: var(--mint-soft);
+    border: 1px solid rgba(53,214,176,0.3);
+    border-radius: 9px;
+    padding: 16px 18px;
+    display:flex;
+    justify-content:space-between;
+    align-items: baseline;
+  }
+  .predict-out .label{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--mint);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .predict-out .value{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--mint);
+  }
+  .cursor{
+    display:inline-block;
+    width: 8px; height: 16px;
+    background: var(--accent);
+    margin-left: 4px;
+    animation: blink 1s steps(1) infinite;
+    vertical-align: middle;
+  }
+  @keyframes blink{ 50%{ opacity: 0; } }
+
+  /* ---------- SECTION HEADINGS ---------- */
+  section{ padding: 84px 0; }
+  .section-head{ text-align:center; max-width: 620px; margin: 0 auto 52px; }
+  .section-head .kicker{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display:block;
+  }
+  .section-head h2{ font-size: clamp(1.6rem, 3vw, 2.2rem); margin-bottom: 12px; }
+  .section-head p{ color: var(--text-dim); font-size: 15.5px; }
+
+  /* ---------- WHY CHOOSE ---------- */
+  .features-grid{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+  @media (max-width: 900px){ .features-grid{ grid-template-columns: repeat(2,1fr); } }
+  @media (max-width: 520px){ .features-grid{ grid-template-columns: 1fr; } }
+  .feature-card{
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 26px 22px;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+  .feature-card:hover{ border-color: var(--accent); transform: translateY(-3px); }
+  .feature-icon{
+    width: 42px; height:42px;
+    border-radius: 9px;
+    background: var(--accent-soft);
+    display:flex; align-items:center; justify-content:center;
+    font-size: 19px;
+    margin-bottom: 16px;
+  }
+  .feature-card h3{ font-size: 16px; margin-bottom: 6px; }
+  .feature-card p{ font-size: 13.5px; color: var(--text-dim); }
+
+  /* ---------- HOW IT WORKS ---------- */
+  .steps{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    position: relative;
+  }
+  @media (max-width: 820px){ .steps{ grid-template-columns: 1fr; gap: 28px; } }
+  .step{
+    text-align:center;
+    padding: 0 24px;
+    position: relative;
+  }
+  .step-num{
+    width: 52px; height:52px;
+    border-radius: 50%;
+    background: var(--bg-alt);
+    border: 1px solid var(--card-border);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 0 auto 18px;
+    font-size: 15px;
+  }
+  .step h3{ font-size: 16px; margin-bottom: 8px; }
+  .step p{ font-size: 13.5px; color: var(--text-dim); max-width: 220px; margin: 0 auto; }
+  .step-connector{
+    position:absolute;
+    top: 26px;
+    right: -50%;
+    width: 100%;
+    height: 1px;
+    background: repeating-linear-gradient(to right, var(--card-border) 0 6px, transparent 6px 12px);
+  }
+  @media (max-width: 820px){ .step-connector{ display:none; } }
+  .steps .step:last-child .step-connector{ display:none; }
+
+  /* ---------- SUPPORTED FEATURES ---------- */
+  .tags{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content:center;
+  }
+  .tag{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-family:'JetBrains Mono', monospace;
+  }
+  .tag .check{ color: var(--mint); font-weight:700; }
+
+  /* ---------- CTA ---------- */
+  .cta{
+    text-align:center;
+    background: linear-gradient(180deg, var(--bg-alt), var(--bg));
+    border-top: 1px solid var(--card-border);
+    border-bottom: 1px solid var(--card-border);
+  }
+  .cta h2{ font-size: clamp(1.6rem, 3.4vw, 2.3rem); margin-bottom: 14px; }
+  .cta p{ color: var(--text-dim); margin-bottom: 30px; }
+
+  /* ---------- FOOTER ---------- */
+  footer{
+    padding: 36px 0;
+    text-align:center;
+    color: var(--text-faint);
+    font-size: 13px;
+  }
+  footer .heart{ color: #FF5F7E; }
+
+  @media (prefers-reduced-motion: reduce){
+    .cursor{ animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<header>
+  <nav class="wrap">
+    <div class="logo">
+      <span class="logo-mark">💻</span>
+      Laptop Price Predictor
+    </div>
+    <div class="nav-links">
+      <a href="#home">Home</a>
+      <a href="#about">About</a>
+      <a href="#features">Features</a>
+      <a href="#predictor">Predictor</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <a href="#predictor" class="nav-cta">Predict Now</a>
+  </nav>
+</header>
+
+<main>
+  <!-- HERO -->
+  <section class="hero wrap" id="home">
+    <div class="hero-copy">
+      <span class="eyebrow">MODEL STATUS: ONLINE</span>
+      <h1>Know a laptop's <span class="accent">fair price</span> before you buy it.</h1>
+      <p class="lead">Enter the specs, and our machine learning model estimates a real-world market price in seconds — trained on thousands of listings across brands and configurations.</p>
+      <div class="btn-row">
+        <a href="#predictor" class="btn btn-primary">🚀 Predict Now</a>
+        <a href="#about" class="btn btn-ghost">Learn More</a>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="terminal">
+        <div class="terminal-bar">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span class="terminal-title">predictor.py — output</span>
+        </div>
+        <div class="terminal-body">
+          <div class="spec-row"><span>brand</span><span>ASUS ROG</span></div>
+          <div class="spec-row"><span>processor</span><span>Intel i7-13700H</span></div>
+          <div class="spec-row"><span>ram</span><span>16 GB DDR5</span></div>
+          <div class="spec-row"><span>storage</span><span>1 TB NVMe SSD</span></div>
+          <div class="spec-row"><span>gpu</span><span>RTX 4060 6GB</span></div>
+          <div class="spec-row"><span>display</span><span>15.6" 165Hz</span></div>
+          <div class="predict-out">
+            <span class="label">Estimated price</span>
+            <span class="value mono" id="priceOut">₹0<span class="cursor"></span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY CHOOSE -->
+  <section id="about">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker">Why this model</span>
+        <h2>Why Choose Our Predictor?</h2>
+        <p>Built for accuracy, speed, and trust — the way a price estimate should be.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>Fast</h3>
+          <p>Instant results the moment you submit your specs.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🤖</div>
+          <h3>AI Powered</h3>
+          <p>An accurate ML model trained on real listings.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3>Reliable</h3>
+          <p>Backed by the latest dataset, kept up to date.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔒</div>
+          <h3>Secure</h3>
+          <p>Your inputs stay private — nothing is stored.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="features" style="background: var(--bg-alt);">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker">Process</span>
+        <h2>How It Works</h2>
+        <p>Three steps between your specs and a real number.</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-connector"></div>
+          <div class="step-num">01</div>
+          <h3>Select Specifications</h3>
+          <p>Choose brand, processor, RAM, storage, GPU, display and more.</p>
+        </div>
+        <div class="step">
+          <div class="step-connector"></div>
+          <div class="step-num">02</div>
+          <h3>AI Processes the Data</h3>
+          <p>Our model compares your configuration against real market data.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">03</div>
+          <h3>Get Estimated Price</h3>
+          <p>Receive a clear price estimate in seconds, ready to use.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUPPORTED FEATURES -->
+  <section>
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker">Inputs</span>
+        <h2>Supported Features</h2>
+        <p>Everything that shapes a laptop's price, in one form.</p>
+      </div>
+      <div class="tags">
+        <span class="tag"><span class="check">✓</span> Brand</span>
+        <span class="tag"><span class="check">✓</span> Processor</span>
+        <span class="tag"><span class="check">✓</span> RAM</span>
+        <span class="tag"><span class="check">✓</span> Storage</span>
+        <span class="tag"><span class="check">✓</span> GPU</span>
+        <span class="tag"><span class="check">✓</span> Display</span>
+        <span class="tag"><span class="check">✓</span> Weight</span>
+        <span class="tag"><span class="check">✓</span> Operating System</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta" id="predictor">
+    <div class="wrap">
+      <h2>Ready to Predict Laptop Price?</h2>
+      <p>Pick your specs and get an estimate in seconds — no signup required.</p>
+      <a href="/predict" class="btn btn-primary">Start Prediction</a>
+    </div>
+  </section>
+</main>
+
+<footer id="contact">
+  <div class="wrap">
+    © 2026 Laptop Price Predictor · Made with <span class="heart">♥</span> using Flask, HTML, CSS &amp; Machine Learning
+  </div>
+</footer>
+
+<script>
+  // animate the hero price ticker counting up once, on load
+  (function(){
+    const el = document.getElementById('priceOut');
+    if(!el) return;
+    const target = 87499; // sample estimated price in rupees
+    const cursor = el.querySelector('.cursor');
+    let current = 0;
+    const steps = 40;
+    const increment = target / steps;
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if(prefersReduced){
+      el.childNodes[0].textContent = '₹' + target.toLocaleString('en-IN');
+      return;
+    }
+
+    const interval = setInterval(() => {
+      current += increment;
+      if(current >= target){
+        current = target;
+        clearInterval(interval);
+      }
+      el.childNodes[0].textContent = '₹' + Math.round(current).toLocaleString('en-IN');
+    }, 45);
+  })();
+</script>
+
+</body>
+</html>
